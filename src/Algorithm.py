@@ -40,6 +40,12 @@ import importlib
 
 #import serial;
 
+
+def debug(*args):
+    DEBUG = 0
+    if DEBUG:
+        print("[DEBUG] (Algorithm) ",*args)
+
 class Algorithm(object):
 
 
@@ -149,7 +155,7 @@ class Algorithm(object):
         
         ''' save measurement configuration '''
         if os.path.exists(self.savedStateDir+"measurement.xml"):
-            os.remove(self.savedStateDir+"measurement.xml", ignore_errors=True)  
+            os.remove(self.savedStateDir+"measurement.xml")  
         shutil.copy("./configurationFiles/measurement/"+self.measurementClassConfFile,self.savedStateDir+"measurement.xml")
         
         '''save assembly compilation in the results dir'''
@@ -318,6 +324,7 @@ class Algorithm(object):
             for i in range(int(self.populationSize)):
                 individuals.append(self.__randomlyCreateIndividual__());
             self.population=Population(individuals);
+            #debug("Initial population is ", self.population);
         else: #initial population based on existing individuals.. Useful for continuing runs that where stopped              
             newerPop=0; ##find which is the newest population      
             for root, dirs, filenames in os.walk(self.seedDir):
@@ -337,7 +344,9 @@ class Algorithm(object):
                     maxId=indiv.myId;
             
             Individual.id=maxId; #the new indiv will start from maxId
+            debug("As we are in the initial pop based on existing individuals, we are defining the bestIndividualUntilNow")
             self.bestIndividualUntilNow=self.population.getFittest(); #set the best individual seen until now
+            debug("Best individual until now is "+self.bestIndividualUntilNow);
             self.loopSize=self.bestIndividualUntilNow.getInstructions().__len__(); #ensure that loop Size is correct
             self.populationsExamined=newerPop+1;#population will start from the newer population
             self.loadRandstate(); #load the previous rand state before evolving pop
@@ -544,13 +553,16 @@ class Algorithm(object):
         #individuals=[0]*int(self.populationSize);
         individuals=[];
         individuals2=[];
+        debug("Evolving population!")
         self.bestIndividualUntilNow=self.population.getFittest()
+        
         if self.ellitism=="true": #TODO make the choice to keep more individuals from previous populations TODO FIX THE true
             individuals.append(self.bestIndividualUntilNow);
             self.bestIndividualUntilNow.generation+=1; #For the next measurement the promoted individuals will be recorded as individuals of the next population.. Is just for avoiding confusions when processing the results 
             childsCreated=1;
         else:
             childsCreated=0;
+            
         if(self.selectionMethod==Algorithm.WHEEL_SELECTION): 
             self.population.keepHalfBest();##sightly algorithm change apply roullete on best 50%
             self.population.setCumulativeFitness(); 
@@ -637,6 +649,7 @@ class Algorithm(object):
         children[1].setParents(individual2,individual1);
         return children; 
     
-    #def getFittest(self):
-    #    return self.bestIndividualUntilNow;
+    def getFittest(self):
+        self.bestIndividualUntilNow = self.population.getFittest();
+        return self.bestIndividualUntilNow;
     

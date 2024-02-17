@@ -12,6 +12,11 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 import operator
 import pickle
 
+def debug(*args):
+    DEBUG = 0
+    if DEBUG:
+        print("[DEBUG] (Population) ",*args)
+
 class Population(object):
     '''
     classdocs
@@ -26,6 +31,7 @@ class Population(object):
         return self.individuals[index];
         
     def getFittest(self):
+        debug("getFittest: individuals fitness vals are ", [indiv.getFitness() for indiv in self.individuals]);
         best_value=float(self.individuals[0].getFitness());
         best_indiv=self.individuals[0];
         for i in range (self.individuals.__len__()):
