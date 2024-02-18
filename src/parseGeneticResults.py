@@ -19,7 +19,15 @@ from Operand import Operand
 import re;
 
 
-path = sys.argv[1] 
+path = sys.argv[1]
+folder_name = path.split("/")[-2] + "_parsedResults"
+folder_path = "/".join(path.split("/")[:-2]) + "/" + folder_name + "/"
+# csv file with the parsed results
+
+os.makedirs(folder_path, exist_ok=True)
+
+best_and_avg_f = open(folder_path + "best_and_average.csv", "w+")
+
 files=[]
 for root, dirs, filenames in os.walk(path): #takes as input the dir with the saved state
     for f in filenames:
@@ -34,6 +42,7 @@ columns=[];
 theBest=[];
 print("best and average of each generation");
 print("generation best average");
+best_and_avg_f.write("generation,best,average\n")
 insHash={};
 
 for f in files:
@@ -62,9 +71,14 @@ for f in files:
     for key in list(insHash.keys()): #clear the hash for the next population
         insHash[key]=0;
     
-    print(str(columns[-1])+" "+str(round(float(best.getFitness()),6))+" "+str(round(float(average),6))  );
+    v1, v2, v3 = str(columns[-1]), str(round(float(best.getFitness()),6)), str(round(float(average),6))
+    print(v1+" "+v2+" "+v3);
+    best_and_avg_f.write(v1+","+v2+","+v3+"\n")
+    
+best_and_avg_f.close()
 #print (allKeys);
 print("end of generation best average");
+
 
 values=re.sub("[A-Za-z]", "", allValues);
 values=re.sub("[\[\]\(\),_]", "", values);
@@ -88,21 +102,35 @@ for column in rows.split("\n"):
     rows=[str(s) for s in column.split()]
 
 
+
+instr_mix_per_gen_f = open(folder_path + "instr_mix_per_gen.csv", "w+")
 print("Instruction Mix per generation");
 
-print (" "+' '.join(rows));
+header = " "+' '.join(rows)
+print (header);
+instr_mix_per_gen_f.write("Generation" + header.replace(" ", ",") + "\n")
 
 for i in range(columns.__len__()):
     print (columns[i],end=" ");
+    instr_mix_per_gen_f.write(columns[i] + ",")
+    strToWrite = ""
     for j in range(rows.__len__()):
         print(round(data[i][j],2),end=" ");
+        strToWrite += str(round(data[i][j],2)) + ","
     print("");
+    instr_mix_per_gen_f.write(strToWrite[:-1] + "\n")
+    strToWrite = ""
     
 #print(values);
 
+instr_mix_per_gen_f.close()
+
+instr_mix_best_per_gen_f = open(folder_path + "instr_mix_best_per_gen.csv", "w+")
 print("Instruction Mix for best of each generation");
 
-print (" "+' '.join(rows));
+header = " "+' '.join(rows)
+print (header);
+instr_mix_best_per_gen_f.write("Generation" + header.replace(" ", ",") + "\n")
 
 
 loopSize=theBest[0].getInstructions().__len__()
@@ -118,16 +146,27 @@ for indiv in theBest:
                     insHash[ins.name]=1;
     sorted(insHash,key=lambda key: insHash[key]);
     print(str(i),end=" ");
+    instr_mix_best_per_gen_f.write(str(i) + ",")
     i+=1;
+    strToWrite = ""
     for key in list(insHash.keys()):
         print(round(float(float(insHash[key])/loopSize),2),end=" ");
+        strToWrite += str(round(float(float(insHash[key])/loopSize),2)) + ","
     print("");
+    instr_mix_best_per_gen_f.write(strToWrite[:-1] + "\n")
+    strToWrite = ""
 
+instr_mix_best_per_gen_f.close()
+
+
+
+type_mix_best_per_gen_f = open(folder_path + "type_mix_best_per_gen.csv", "w+")
 print("Type Mix for best of each generation");
 
 typeHash={};
-
 i=1;
+strToWrite = ""
+
 for indiv in theBest:
     for key in list(typeHash.keys()): #clear the hash for the next individual
         typeHash[key]=0;
@@ -145,12 +184,24 @@ for indiv in theBest:
                     
     sorted(typeHash,key=lambda key: typeHash[key]);
     print(str(i),end=" ");
+    strToWrite += str(i) + ","
     i+=1;
+
     for key in list(typeHash.keys()):
         print(round(float(float(typeHash[key])/loopSize),2),end=" ");
+        strToWrite += str(round(float(float(typeHash[key])/loopSize),2)) + ","
     print("");
+    strToWrite = strToWrite[:-1] + "\n"
+
+headerToWrite = ""
 for key in typeHash.keys():
     print(key,end=" ")
+    headerToWrite += key + ","
+    
+type_mix_best_per_gen_f.write("Generation," + headerToWrite[:-1] + "\n")
+type_mix_best_per_gen_f.write(strToWrite)
+
+type_mix_best_per_gen_f.close()
 
 sys.exit();
 
